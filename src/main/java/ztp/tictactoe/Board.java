@@ -8,6 +8,8 @@ package ztp.tictactoe;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -31,27 +33,12 @@ abstract class Click {
     public abstract void apply(Point p);
 }
 
-class ClearButton implements ActionListener {
-
-    Board board;
-
-    public ClearButton(Board board) {
-        this.board = board;
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent ae) {
-        board.clearBoard();
-    }
-
-}
-
 public class Board extends JPanel {
 
     private Map<Point, ITile> board = new <Point, ITile>HashMap();
     private ImageLoader loader = new BufferedImageLoader();
     public static int ZEROX = 0;
-    public static int ZEROY = 20;
+    public static int ZEROY = 0;
     JButton clearBtn;
 
     public void paint(Graphics g) {
@@ -61,7 +48,6 @@ public class Board extends JPanel {
             ITile pc = (ITile) e.getValue();
             pc.draw((Graphics2D) g);
         }
-        clearBtn.paint(g);
     }
 
     public void putX(Point p) {
@@ -96,9 +82,7 @@ public class Board extends JPanel {
 
         clearBtn = new JButton("CLEAR");
         clearBtn.setBounds(64 - 24, 0, 24, 20);
-        clearBtn.addActionListener(new ClearButton(this));
-
-        this.add(clearBtn);
+        clearBtn.addActionListener(new ClearButtonAction(this));
 
         this.addMouseListener(new MouseAdapter() {
             @Override
