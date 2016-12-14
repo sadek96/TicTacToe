@@ -12,11 +12,18 @@ import java.awt.Dimension;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Point;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
+import static java.lang.Thread.sleep;
 import java.text.ParseException;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
@@ -26,6 +33,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import javax.swing.text.DefaultFormatter;
+import static ztp.tictactoe.Board.ZEROX;
 import static ztp.tictactoe.Board.ZEROY;
 import static ztp.tictactoe.Tile.TILESIZE;
 
@@ -53,9 +61,13 @@ class ClearButtonAction implements ActionListener {
 
 class HostButtonAction implements ActionListener {
 
+    public HostButtonAction() {
+    }
+
     @Override
     public void actionPerformed(ActionEvent ae) {
-        //Oczekiwanie na klienta czy cuś
+        SocketProxy.makeHost();
+        TicTacToe.wait = false;
     }
 
 }
@@ -68,6 +80,7 @@ class JoinButtonAction implements ActionListener {
     public JoinButtonAction(JFormattedTextField field, JLabel label) {
         this.textField = field;
         this.label = label;
+
     }
 
     @Override
@@ -80,23 +93,72 @@ class JoinButtonAction implements ActionListener {
             byte[] ip = null;
             ip = (byte[]) formatter.stringToValue(text);
             text = formatter.valueToString(ip);
+            label.setText(text);
+            SocketProxy.makeClient();
+            SocketProxy.setIp(text);
+            TicTacToe.wait = false;
+            
         } catch (ParseException pe) {
             text = pe.getMessage();
-        } 
             label.setText(text);
-            textField.setText("");
-        
+        }
+
+        textField.setText("");
 
     }
 
 }
 
+class BoardMouse extends MouseAdapter {
+
+    Board board;
+    Game game;
+
+    public BoardMouse(Board board, Game game) {
+        this.board = board;
+        this.game = game;
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent me) {
+        Point p = new Point((me.getX() - ZEROX) / TILESIZE, (me.getY() - ZEROY) / TILESIZE);
+        Click click = new Click() {
+            @Override
+            public boolean isLegal(Point pt) {
+                int s = board.getTile(pt).getState();
+                if (s < 2 && game.isMyTurn()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            public void apply(Point pt) {
+                board.putX(pt);
+                board.repaint();
+                game.setMyTurn(false);
+                game.writeLine(pt.x + "," + pt.y);
+                game.setMessage("Tura przeciwnika...");
+            }
+        };
+
+        if (click.isLegal(p)) {
+            click.apply(p);
+        }
+
+    }
+}
+
 public class TicTacToe {
+
+    static boolean wait = true;
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args){
+
         JFrame frame = new JFrame("TicTacToe");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Board board = new Board();
@@ -161,6 +223,38 @@ public class TicTacToe {
         frame.pack();
         frame.setVisible(true);
         frame.setResizable(false);
+
+        while (wait){
+            try {
+                sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(TicTacToe.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        SocketProxy socket = null;
+        try {
+            socket = SocketProxy.getInstance();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        Game game = new Game(messageLabel,board, socket);
+        
+        
+        if (socket.isHost()) {
+            game.setMyTurn(true);
+           messageLabel.setText("Otrzymano połącznie...");
+           joinButton.setEnabled(false);
+        } else {
+            hostButton.setEnabled(false);
+            game.setMyTurn(false);
+            messageLabel.setText("Połączono...");
+        }
+
+        board.addMouseListener(new BoardMouse(board, game));
+
+        game.run();
 
     }
 

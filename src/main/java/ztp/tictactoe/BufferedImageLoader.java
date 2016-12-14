@@ -15,11 +15,11 @@ import javax.imageio.ImageIO;
  *
  * @author Daniel
  */
-public class BufferedImageLoader extends ImageLoader{
-
-    private BufferedImage image;
+public class BufferedImageLoader implements ImageLoader {
 
     public BufferedImage loadImage(String path) {
+        BufferedImage image = null;
+
         try {
             image = ImageIO.read(getClass().getResource(path));
         } catch (IOException ex) {

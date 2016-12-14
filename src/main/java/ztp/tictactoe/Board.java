@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import static ztp.tictactoe.Board.ZEROX;
+import static ztp.tictactoe.Board.ZEROY;
 import static ztp.tictactoe.Tile.TILESIZE;
 
 /**
@@ -30,8 +32,6 @@ abstract class Click {
 }
 
 public class Board extends JPanel {
-
-    private String tiles[][] = new String[3][3];
 
     private Map<Point, ITile> board = new <Point, ITile>HashMap();
     public static int ZEROX = 0;
@@ -69,6 +69,10 @@ public class Board extends JPanel {
         repaint();
     }
 
+    public ITile getTile(Point p){
+        return board.get(p);
+    }
+    
     Board() {
         ImageLoader loader = new BufferedImageLoader();
         images = new Images(loader);
@@ -85,35 +89,7 @@ public class Board extends JPanel {
         clearBtn.setBounds(64 - 24, 0, 24, 20);
         clearBtn.addActionListener(new ClearButtonAction(this));
 
-        this.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent me) {
-                Point p = new Point((me.getX() - ZEROX) / TILESIZE, (me.getY() - ZEROY) / TILESIZE);
-                Click click = new Click() {
-                    @Override
-                    public boolean isLegal(Point pt) {
-                        int s = board.get(pt).getState();
-                        if (s > 1) {
-                            return false;
-                        } else {
-                            return true;
-                        }
-                    }
-
-                    @Override
-                    public void apply(Point pt) {
-                        ITile tile = board.get(pt);
-                        board.put(pt, new TileX(tile, images.getxTile()));
-                        repaint();
-                    }
-                };
-
-                if (click.isLegal(p)) {
-                    click.apply(p);
-                }
-
-            }
-        });
+        
 
     }
 
