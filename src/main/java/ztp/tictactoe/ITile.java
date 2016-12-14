@@ -22,7 +22,5 @@ public interface ITile {
     //Zwracamy obiekt dekorowany, potrzebny do metody mouseRealeased
     ITile getDecoratedTile();
 
-    ImageLoader getImageLoader();
-
-    int getState();
+    public int getState();
 }

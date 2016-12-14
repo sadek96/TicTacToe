@@ -82,10 +82,10 @@ class JoinButtonAction implements ActionListener {
             text = formatter.valueToString(ip);
         } catch (ParseException pe) {
             text = pe.getMessage();
-        } finally {
+        } 
             label.setText(text);
             textField.setText("");
-        }
+        
 
     }
 

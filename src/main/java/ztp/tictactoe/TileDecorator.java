@@ -35,9 +35,6 @@ public class TileDecorator implements ITile {
         return this.tile;
     }
 
-    public ImageLoader getImageLoader() {
-        return this.tile.getImageLoader();
-    }
 
     public int getState() {
         return this.tile.getState();

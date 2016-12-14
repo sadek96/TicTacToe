@@ -16,16 +16,14 @@ import static ztp.tictactoe.Board.ZEROY;
  */
 public class Tile implements ITile {
 
-    public ImageLoader loader;
     public static final int TILESIZE = 128;
     private Image image;
     private int state;
 
     private int x, y;
 
-    public Tile(int xx, int yy, ImageLoader loader) {
-        this.loader = loader;
-        image = this.loader.loadImage("/empty.png");
+    public Tile(int xx, int yy, Image image) {
+        this.image = image;
         x = xx;
         y = yy;
         state = 0;//empty
@@ -45,10 +43,6 @@ public class Tile implements ITile {
 
     public Tile getDecoratedTile() {
         return this;
-    }
-
-    public ImageLoader getImageLoader() {
-        return this.loader;
     }
 
     public int getState() {

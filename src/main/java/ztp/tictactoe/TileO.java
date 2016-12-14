@@ -20,10 +20,10 @@ public class TileO extends TileDecorator {
     private Image image;
     private int state;
 
-    public TileO(ITile tile) {
+    public TileO(ITile tile,Image image) {
         super(tile);
         state=3;//stan O
-        this.image = getImageLoader().loadImage("/o.png");
+        this.image = image;
 
     }
 

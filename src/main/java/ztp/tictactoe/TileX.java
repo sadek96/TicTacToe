@@ -20,10 +20,10 @@ public class TileX extends TileDecorator {
     private Image image;
     private int state;
 
-    public TileX(ITile tile) {
+    public TileX(ITile tile, Image image) {
         super(tile);
         state=2;
-        this.image = getImageLoader().loadImage("/x.png");
+        this.image = image;
     }
 
     public void draw(Graphics2D g) {

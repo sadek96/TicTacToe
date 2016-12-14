@@ -8,11 +8,7 @@ package ztp.tictactoe;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -35,11 +31,13 @@ abstract class Click {
 
 public class Board extends JPanel {
 
+    private String tiles[][] = new String[3][3];
+
     private Map<Point, ITile> board = new <Point, ITile>HashMap();
-    private ImageLoader loader = new BufferedImageLoader();
     public static int ZEROX = 0;
     public static int ZEROY = 0;
-    JButton clearBtn;
+    private JButton clearBtn;
+    private Images images;
 
     public void paint(Graphics g) {
         g.drawRect(0, 0, TILESIZE * 3, TILESIZE * 3);
@@ -53,13 +51,13 @@ public class Board extends JPanel {
     public void putX(Point p) {
         ITile tile;
         tile = board.get(p);
-        board.put(p, new TileX(tile));
+        board.put(p, new TileX(tile, images.getxTile()));
     }
 
     public void putO(Point p) {
         ITile tile;
         tile = board.get(p);
-        board.put(p, new TileO(tile));
+        board.put(p, new TileO(tile, images.getoTile()));
     }
 
     public void clearBoard() {
@@ -72,9 +70,12 @@ public class Board extends JPanel {
     }
 
     Board() {
+        ImageLoader loader = new BufferedImageLoader();
+        images = new Images(loader);
+
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                board.put(new Point(i, j), new Tile(i, j, loader));
+                board.put(new Point(i, j), new Tile(i, j, images.getEmptyTile()));
             }
         }
 
@@ -102,7 +103,7 @@ public class Board extends JPanel {
                     @Override
                     public void apply(Point pt) {
                         ITile tile = board.get(pt);
-                        board.put(pt, new TileX(tile));
+                        board.put(pt, new TileX(tile, images.getxTile()));
                         repaint();
                     }
                 };
