@@ -41,6 +41,12 @@ public class Board extends JPanel {
     public static int ZEROY = 0;
     JButton clearBtn;
 
+    
+    //TEST
+    Game game=new Game();
+    
+    
+    
     public void paint(Graphics g) {
         g.drawRect(0, 0, TILESIZE * 3, TILESIZE * 3);
         for (Map.Entry<Point, ITile> e : board.entrySet()) {
@@ -54,6 +60,7 @@ public class Board extends JPanel {
         ITile tile;
         tile = board.get(p);
         board.put(p, new TileX(tile));
+        
     }
 
     public void putO(Point p) {
@@ -103,6 +110,8 @@ public class Board extends JPanel {
                     public void apply(Point pt) {
                         ITile tile = board.get(pt);
                         board.put(pt, new TileX(tile));
+                        game.addX();
+        game.check(board);
                         repaint();
                     }
                 };
