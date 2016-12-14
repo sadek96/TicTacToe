@@ -12,9 +12,13 @@ import javax.swing.JLabel;
  *
  * @author Komputer
  */
-public class Game {
-   JLabel label;
+class GameState{
 
+}
+
+public class Game{
+    
+    JLabel label;
     Board board;
     SocketProxy socket;
     boolean myTurn;
@@ -36,7 +40,7 @@ public class Game {
         this.running = running;
     }
 
-    public Game(JLabel label,Board board, SocketProxy socket) {
+    public Game(JLabel label, Board board, SocketProxy socket) {
         this.label = label;
         this.board = board;
         this.socket = socket;
@@ -49,7 +53,6 @@ public class Game {
         String in = null;
         while (running) {
 
-            
             in = readLine();
 
             myTurn = false;
@@ -80,8 +83,8 @@ public class Game {
         socket.writeLine(str);
     }
 
-    public void setMessage(String text){
+    public void setMessage(String text) {
         this.label.setText(text);
     }
-    
+
 }

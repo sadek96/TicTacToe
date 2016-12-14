@@ -9,14 +9,11 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import static ztp.tictactoe.Board.ZEROX;
 import static ztp.tictactoe.Board.ZEROY;
 import static ztp.tictactoe.Tile.TILESIZE;
 
@@ -24,12 +21,6 @@ import static ztp.tictactoe.Tile.TILESIZE;
  *
  * @author Daniel
  */
-abstract class Click {
-
-    public abstract boolean isLegal(Point p);
-
-    public abstract void apply(Point p);
-}
 
 public class Board extends JPanel {
 

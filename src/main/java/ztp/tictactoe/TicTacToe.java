@@ -97,7 +97,7 @@ class JoinButtonAction implements ActionListener {
             SocketProxy.makeClient();
             SocketProxy.setIp(text);
             TicTacToe.wait = false;
-            
+
         } catch (ParseException pe) {
             text = pe.getMessage();
             label.setText(text);
@@ -109,8 +109,36 @@ class JoinButtonAction implements ActionListener {
 
 }
 
+class BoardClick implements Command {
+
+    Board board;
+    Game game;
+    Point p;
+
+    public BoardClick(Board board, Game game, Point p) {
+        this.board = board;
+        this.game = game;
+        this.p = p;
+    }
+
+    @Override
+    public void execute() {
+
+        int s = board.getTile(p).getState();
+        if (s < 2 && game.isMyTurn()) {
+            board.putX(p);
+            board.repaint();
+            game.setMyTurn(false);
+            game.writeLine(p.x + "," + p.y);
+            game.setMessage("Tura przeciwnika...");
+        }
+    }
+
+}
+
 class BoardMouse extends MouseAdapter {
 
+    Command clickCommand;
     Board board;
     Game game;
 
@@ -122,31 +150,8 @@ class BoardMouse extends MouseAdapter {
     @Override
     public void mouseClicked(MouseEvent me) {
         Point p = new Point((me.getX() - ZEROX) / TILESIZE, (me.getY() - ZEROY) / TILESIZE);
-        Click click = new Click() {
-            @Override
-            public boolean isLegal(Point pt) {
-                int s = board.getTile(pt).getState();
-                if (s < 2 && game.isMyTurn()) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-
-            @Override
-            public void apply(Point pt) {
-                board.putX(pt);
-                board.repaint();
-                game.setMyTurn(false);
-                game.writeLine(pt.x + "," + pt.y);
-                game.setMessage("Tura przeciwnika...");
-            }
-        };
-
-        if (click.isLegal(p)) {
-            click.apply(p);
-        }
-
+        clickCommand = new BoardClick(board, game, p);
+        clickCommand.execute();
     }
 }
 
@@ -157,7 +162,7 @@ public class TicTacToe {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args){
+    public static void main(String[] args) {
 
         JFrame frame = new JFrame("TicTacToe");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -224,7 +229,7 @@ public class TicTacToe {
         frame.setVisible(true);
         frame.setResizable(false);
 
-        while (wait){
+        while (wait) {
             try {
                 sleep(1000);
             } catch (InterruptedException ex) {
@@ -233,19 +238,20 @@ public class TicTacToe {
         }
 
         SocketProxy socket = null;
+        
+        
         try {
             socket = SocketProxy.getInstance();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
 
-        Game game = new Game(messageLabel,board, socket);
-        
-        
+        Game game = new Game(messageLabel, board, socket);
+
         if (socket.isHost()) {
             game.setMyTurn(true);
-           messageLabel.setText("Otrzymano połącznie...");
-           joinButton.setEnabled(false);
+            messageLabel.setText("Otrzymano połącznie...");
+            joinButton.setEnabled(false);
         } else {
             hostButton.setEnabled(false);
             game.setMyTurn(false);
