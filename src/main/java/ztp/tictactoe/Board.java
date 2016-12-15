@@ -21,13 +21,11 @@ import static ztp.tictactoe.Tile.TILESIZE;
  *
  * @author Daniel
  */
-
 public class Board extends JPanel {
 
     private Map<Point, ITile> board = new <Point, ITile>HashMap();
     public static int ZEROX = 0;
     public static int ZEROY = 0;
-    private JButton clearBtn;
     private Images images;
 
     public void paint(Graphics g) {
@@ -60,10 +58,10 @@ public class Board extends JPanel {
         repaint();
     }
 
-    public ITile getTile(Point p){
+    public ITile getTile(Point p) {
         return board.get(p);
     }
-    
+
     Board() {
         ImageLoader loader = new BufferedImageLoader();
         images = new Images(loader);
@@ -75,13 +73,6 @@ public class Board extends JPanel {
         }
 
         setPreferredSize(new Dimension(TILESIZE * 3 - 2, TILESIZE * 3 - 2 + ZEROY));
-
-        clearBtn = new JButton("CLEAR");
-        clearBtn.setBounds(64 - 24, 0, 24, 20);
-        clearBtn.addActionListener(new ClearButtonAction(this));
-
-        
-
     }
 
 }

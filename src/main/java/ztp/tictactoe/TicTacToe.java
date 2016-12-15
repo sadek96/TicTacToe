@@ -7,6 +7,7 @@ package ztp.tictactoe;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 
 import java.awt.Dimension;
 
@@ -44,21 +45,6 @@ import static ztp.tictactoe.Tile.TILESIZE;
  *
  *
  */
-class ClearButtonAction implements ActionListener {
-
-    Board board;
-
-    public ClearButtonAction(Board board) {
-        this.board = board;
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent ae) {
-        board.clearBoard();
-    }
-
-}
-
 class HostButtonAction implements ActionListener {
 
     public HostButtonAction() {
@@ -66,6 +52,20 @@ class HostButtonAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent ae) {
+        Command clickCommand = new HostButtonClick();
+        clickCommand.execute();
+    }
+
+}
+
+class HostButtonClick implements Command {
+
+    public HostButtonClick() {
+
+    }
+
+    @Override
+    public void execute() {
         SocketProxy.makeHost();
         TicTacToe.wait = false;
     }
@@ -85,26 +85,8 @@ class JoinButtonAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent ae) {
-        String text = textField.getText();
-        AbstractFormatter formatter = textField.getFormatter();
-        //Połączenie z serwerem
-        //To narazie testuję wypisywanie textu w labelu
-        try {
-            byte[] ip = null;
-            ip = (byte[]) formatter.stringToValue(text);
-            text = formatter.valueToString(ip);
-            label.setText(text);
-            SocketProxy.makeClient();
-            SocketProxy.setIp(text);
-            TicTacToe.wait = false;
-
-        } catch (ParseException pe) {
-            text = pe.getMessage();
-            label.setText(text);
-        }
-
-        textField.setText("");
-
+        Command clickCommand = new JoinButtonClick(textField, label);
+        clickCommand.execute();
     }
 
 }
@@ -136,9 +118,44 @@ class BoardClick implements Command {
 
 }
 
+class JoinButtonClick implements Command {
+
+    JFormattedTextField textField;
+    JLabel label;
+
+    public JoinButtonClick(JFormattedTextField textField, JLabel label) {
+        this.textField = textField;
+        this.label = label;
+    }
+
+    @Override
+    public void execute() {
+
+        String text = textField.getText();
+        AbstractFormatter formatter = textField.getFormatter();
+        //Połączenie z serwerem
+        //To narazie testuję wypisywanie textu w labelu
+        try {
+            byte[] ip = null;
+            ip = (byte[]) formatter.stringToValue(text);
+            text = formatter.valueToString(ip);
+            label.setText(text);
+            SocketProxy.makeClient();
+            SocketProxy.setIp(text);
+            TicTacToe.wait = false;
+
+        } catch (ParseException pe) {
+            text = pe.getMessage();
+            label.setText(text);
+        }
+
+        textField.setText("");
+    }
+
+}
+
 class BoardMouse extends MouseAdapter {
 
-    Command clickCommand;
     Board board;
     Game game;
 
@@ -150,8 +167,177 @@ class BoardMouse extends MouseAdapter {
     @Override
     public void mouseClicked(MouseEvent me) {
         Point p = new Point((me.getX() - ZEROX) / TILESIZE, (me.getY() - ZEROY) / TILESIZE);
-        clickCommand = new BoardClick(board, game, p);
+        Command clickCommand = new BoardClick(board, game, p);
         clickCommand.execute();
+    }
+}
+
+class ContentPanelBuilder implements PanelBuilder {
+
+    private JPanel contentPanel;
+    private JPanel boardAndMessages;
+    private JPanel connectionPanel;
+
+    public ContentPanelBuilder() {
+        contentPanel = new JPanel(new BorderLayout());
+    }
+
+    public ContentPanelBuilder(JPanel boardAndMsg, JPanel comPanel) {
+        contentPanel = new JPanel(new BorderLayout());
+        this.boardAndMessages = boardAndMsg;
+        this.connectionPanel = comPanel;
+    }
+
+    public ContentPanelBuilder(int vGap, int hGap) {
+        contentPanel = new JPanel(new BorderLayout(vGap, hGap));
+    }
+
+    public void addSouthComponent(Component component) {
+        contentPanel.add(component, BorderLayout.SOUTH);
+    }
+
+    public void addNorthComponent(Component component) {
+        contentPanel.add(component, BorderLayout.NORTH);
+    }
+
+    public void addEastComponent(Component component) {
+        contentPanel.add(component, BorderLayout.EAST);
+    }
+
+    public void addWestComponent(Component component) {
+        contentPanel.add(component, BorderLayout.WEST);
+    }
+
+    public JPanel buildPanel() {
+        addWestComponent(connectionPanel);
+        addEastComponent(boardAndMessages);
+        contentPanel.setBackground(Color.BLACK);
+        return contentPanel;
+    }
+}
+
+class ConnectionPanelBuilder implements PanelBuilder {
+
+    JPanel panel;
+    GridBagLayout layout;
+    GridBagConstraints gbc;
+    JButton hBtn;
+    JButton jBtn;
+    JFormattedTextField ipField;
+
+    public ConnectionPanelBuilder(JButton hBtn, JButton jBtn, JFormattedTextField ipField) {
+        this.panel = new JPanel();
+        this.layout = new GridBagLayout();
+        panel.setLayout(layout);
+        this.gbc = new GridBagConstraints();
+        this.jBtn = jBtn;
+        this.hBtn = hBtn;
+        this.ipField = ipField;
+    }
+
+    public JPanel buildPanel() {
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        panel.add(hBtn, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        panel.add(jBtn, gbc);
+
+        ipField.setSize(125, 25);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        panel.add(ipField, gbc);
+
+        panel.setPreferredSize(new Dimension(TILESIZE * 2 - 2, TILESIZE * 3 - 2 + ZEROY));
+        panel.setBackground(Color.DARK_GRAY);
+
+        return panel;
+    }
+}
+
+class BoardMsgPanelBuilder implements PanelBuilder {
+
+    JPanel contentPanel;
+    JPanel panel;
+    JLabel label;
+    Board board;
+
+    public BoardMsgPanelBuilder(Board board, JLabel label) {
+        contentPanel = new JPanel(new BorderLayout());
+        panel = new JPanel();
+        this.label = label;
+        this.board = board;
+    }
+
+    @Override
+    public JPanel buildPanel() {
+        panel.add(label);
+        panel.setPreferredSize(new Dimension(TILESIZE * 3 - 2, TILESIZE / 2 - 2));
+        panel.setBackground(Color.LIGHT_GRAY);
+        contentPanel.add(board, BorderLayout.NORTH);
+        contentPanel.add(panel, BorderLayout.SOUTH);
+        contentPanel.setBackground(Color.BLACK);
+        return contentPanel;
+    }
+
+}
+
+class PanelArchitect {
+
+    JFrame frame;
+    JPanel contentPanel;
+    JPanel connectionPanel;
+    JPanel boardAndMessages;
+    JLabel messageLabel;
+    JButton hostButton;
+    JButton joinButton;
+    JFormattedTextField ipField;
+    Board board;
+    PanelBuilder builder;
+
+    public void construct() {
+        frame = new JFrame("TicTacToe");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        board = new Board();
+
+        messageLabel = new JLabel("Witaj...", JLabel.CENTER);
+
+        hostButton = new JButton("Host");
+        hostButton.addActionListener(new HostButtonAction());
+
+        ipField = new JFormattedTextField(new IPAddressFormatter());
+        ipField.setToolTipText("Wprowadź IP hosta");
+
+        joinButton = new JButton("Join");
+        joinButton.addActionListener(new JoinButtonAction(ipField, messageLabel));
+
+        builder = new ContentPanelBuilder(new BoardMsgPanelBuilder(board, messageLabel).buildPanel(), new ConnectionPanelBuilder(hostButton, joinButton, ipField).buildPanel());
+        contentPanel = builder.buildPanel();
+
+        frame.add(contentPanel);
+
+        frame.pack();
+        frame.setVisible(true);
+        frame.setResizable(false);
+    }
+
+    public JLabel getMsgLabel() {
+        return this.messageLabel;
+    }
+
+    public Board getBoard() {
+        return this.board;
+    }
+
+    public JButton getJoinButton() {
+        return this.joinButton;
+    }
+
+    public JButton getHostButton() {
+        return this.hostButton;
     }
 }
 
@@ -163,71 +349,17 @@ public class TicTacToe {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        JLabel messageLabel;
+        Board board;
+        JButton joinButton, hostButton;
 
-        JFrame frame = new JFrame("TicTacToe");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        Board board = new Board();
-        JPanel contentPanel = new JPanel();
-        JPanel connectionPanel = new JPanel();
-        JPanel boardAndMessages = new JPanel();
-        JPanel messagesPanel = new JPanel();
-        JLabel messageLabel = new JLabel("Czekam na klienta...", JLabel.CENTER);
+        PanelArchitect architect = new PanelArchitect();
+        architect.construct();
 
-        JButton hostButton = new JButton("Host");
-        hostButton.addActionListener(new HostButtonAction());
-
-        JFormattedTextField ipField = new JFormattedTextField(new IPAddressFormatter());
-        ipField.setToolTipText("Wprowadź IP hosta");
-
-        JButton joinButton = new JButton("Join");
-        joinButton.addActionListener(new JoinButtonAction(ipField, messageLabel));
-
-        GridBagLayout gbl = new GridBagLayout();
-        GridBagConstraints gbc = new GridBagConstraints();
-        connectionPanel.setLayout(gbl);
-
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        connectionPanel.add(hostButton, gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        connectionPanel.add(joinButton, gbc);
-
-        ipField.setSize(125, 25);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = GridBagConstraints.REMAINDER;
-        connectionPanel.add(ipField, gbc);
-
-        messagesPanel.add(messageLabel);
-
-        connectionPanel.setPreferredSize(new Dimension(TILESIZE * 2 - 2, TILESIZE * 3 - 2 + ZEROY));
-        connectionPanel.setBackground(Color.DARK_GRAY);
-
-        messagesPanel.setPreferredSize(new Dimension(TILESIZE * 3 - 2, TILESIZE / 2 - 2));
-        messagesPanel.setBackground(Color.LIGHT_GRAY);
-
-        boardAndMessages.setLayout(new BorderLayout());
-        boardAndMessages.setBackground(Color.BLACK);
-
-        board.setBackground(Color.WHITE);
-
-        boardAndMessages.add(board, BorderLayout.NORTH);
-
-        boardAndMessages.add(messagesPanel, BorderLayout.SOUTH);
-
-        contentPanel.setLayout(new BorderLayout());
-        contentPanel.add(connectionPanel, BorderLayout.WEST);
-        contentPanel.add(boardAndMessages, BorderLayout.EAST);
-
-        contentPanel.setBackground(Color.BLACK);
-        frame.add(contentPanel);
-
-        frame.pack();
-        frame.setVisible(true);
-        frame.setResizable(false);
+        joinButton = architect.getJoinButton();
+        messageLabel = architect.getMsgLabel();
+        board = architect.getBoard();
+        hostButton = architect.getHostButton();
 
         while (wait) {
             try {
@@ -238,15 +370,14 @@ public class TicTacToe {
         }
 
         SocketProxy socket = null;
-        
-        
+
         try {
             socket = SocketProxy.getInstance();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
 
-        Game game = new Game(messageLabel, board, socket);
+        Game game = new Game(architect.getMsgLabel(), architect.getBoard(), socket);
 
         if (socket.isHost()) {
             game.setMyTurn(true);
